@@ -1,0 +1,33 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_DB: smenatrack
+      POSTGRES_USER: smenatrack
+      POSTGRES_PASSWORD: smenatrack_password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  backend:
+    build: ./backend
+    depends_on: [postgres]
+    ports: ['3000:3000']
+    environment:
+      DB_HOST: postgres # имя сервиса Compose, а не localhost — оба контейнера в одной docker-сети
+      DB_PORT: 5432
+      DB_USER: smenatrack
+      DB_PASSWORD: smenatrack_password
+      DB_NAME: smenatrack
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: http://localhost:8080
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports: ['8080:80']
+
+volumes:
+  pgdata:
