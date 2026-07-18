@@ -16,6 +16,7 @@ describe('HabitsService', () => {
   const mockLogsRepo = { find: jest.fn() };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module = await Test.createTestingModule({
       providers: [
         HabitsService,

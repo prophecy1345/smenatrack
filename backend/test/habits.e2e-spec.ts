@@ -28,14 +28,18 @@ describe('POST /habits (интеграционный тест)', () => {
     const email = `habits-e2e-${Date.now()}@example.com`;
     await request(app.getHttpServer())
       .post('/auth/register')
-      .send({ email, password: 'password123', shiftPattern: '2/2' });
+      .send({ email, password: 'password123', shiftPattern: '2/2' })
+      .expect(201);
     const login = await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ email, password: 'password123' });
+      .send({ email, password: 'password123' })
+      .expect(201);
     testToken = (login.body as { accessToken: string }).accessToken;
   });
 
-  afterAll(() => app.close());
+  afterAll(async () => {
+    await app.close();
+  });
 
   it('создаёт привычку и возвращает 201', () => {
     return request(app.getHttpServer())
