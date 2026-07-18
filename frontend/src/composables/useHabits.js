@@ -23,12 +23,14 @@ export function useHabits() {
   async function createHabit(dto) {
     fieldErrors.value = []
     try {
-      const { data } = await api.post('/habits', dto)
-      habits.value.push(data)
+      await api.post('/habits', dto)
       return true
     } catch (e) {
       if (e.response?.status === 400) {
-        fieldErrors.value = e.response.data.message // массив строк от class-validator
+        const message = e.response.data.message
+        fieldErrors.value = Array.isArray(message) ? message : [message]
+      } else {
+        fieldErrors.value = ['Не удалось создать привычку']
       }
       return false
     }

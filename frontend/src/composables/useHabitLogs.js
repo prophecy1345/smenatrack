@@ -20,6 +20,7 @@ export function useHabitLogs() {
   }
 
   async function createLog(habitId, dto) {
+    error.value = null
     try {
       const { data } = await api.post(`/habits/${habitId}/logs`, dto)
       logs.value.unshift(data)
@@ -31,6 +32,7 @@ export function useHabitLogs() {
   }
 
   async function removeLog(habitId, logId) {
+    error.value = null
     try {
       await api.delete(`/habits/${habitId}/logs/${logId}`)
       logs.value = logs.value.filter((l) => l.id !== logId)
