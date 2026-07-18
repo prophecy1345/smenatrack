@@ -87,30 +87,44 @@ describe('POST /habits (интеграционный тест)', () => {
   });
 
   it('PATCH /auth/me меняет график и это видно в GET /habits', async () => {
-    // 2026-07-19 при цикле 3/3 — второй рабочий день, при 1/3 — уже выходной
-    await request(app.getHttpServer())
-      .patch('/auth/me')
-      .set('Authorization', `Bearer ${testToken}`)
-      .send({
-        shiftPattern: '1/3',
-        shiftStartDate: '2026-07-18',
-        timeZone: 'Europe/Belgrade',
-      })
-      .expect(200)
-      .expect((res) => {
-        expect((res.body as { shiftPattern: string }).shiftPattern).toBe('1/3');
-        expect(res.body).not.toHaveProperty('passwordHash');
-      });
+    // Тест не может выбрать дату своего запуска, поэтому строит график относительно
+    // серверного today: только так утверждение «сегодня выходной» верно в любой день.
+    const listHabits = () =>
+      request(app.getHttpServer())
+        .get('/habits')
+        .set('Authorization', `Bearer ${testToken}`)
+        .expect(200);
 
-    await request(app.getHttpServer())
-      .get('/habits')
-      .set('Authorization', `Bearer ${testToken}`)
-      .expect(200)
-      .expect((res) => {
-        const body = res.body as { today: string; isWorkdayToday: boolean };
-        expect(body.today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-        expect(typeof body.isWorkdayToday).toBe('boolean');
-      });
+    const first = await listHabits();
+    const today = (first.body as { today: string }).today;
+    expect(today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    const shiftDate = (offsetDays: number) => {
+      const [year, month, day] = today.split('-').map(Number);
+      const shifted = new Date(Date.UTC(year, month - 1, day + offsetDays));
+      return shifted.toISOString().slice(0, 10);
+    };
+
+    const patchSchedule = (shiftStartDate: string) =>
+      request(app.getHttpServer())
+        .patch('/auth/me')
+        .set('Authorization', `Bearer ${testToken}`)
+        .send({ shiftPattern: '1/3', shiftStartDate, timeZone: 'UTC' })
+        .expect(200);
+
+    // цикл 1/3: длина 4 дня, рабочий только нулевой день цикла
+    const workday = await patchSchedule(shiftDate(0));
+    expect((workday.body as { shiftPattern: string }).shiftPattern).toBe('1/3');
+    expect(workday.body).not.toHaveProperty('passwordHash');
+    expect(
+      ((await listHabits()).body as { isWorkdayToday: boolean }).isWorkdayToday,
+    ).toBe(true);
+
+    // сдвиг старта на день назад делает сегодняшний день первым выходным цикла
+    await patchSchedule(shiftDate(-1));
+    expect(
+      ((await listHabits()).body as { isWorkdayToday: boolean }).isWorkdayToday,
+    ).toBe(false);
   });
 
   it('PATCH /auth/me с неизвестным графиком возвращает 400', () => {
