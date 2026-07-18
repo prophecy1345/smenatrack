@@ -16,6 +16,7 @@ import { AuthModule } from './auth/auth.module';
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
+      ssl: process.env.DB_SSL === 'true',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: false,
       migrations: [__dirname + '/migrations/*{.ts,.js}'],

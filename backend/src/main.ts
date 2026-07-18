@@ -26,7 +26,11 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  app.enableCors({ origin: process.env.FRONTEND_URL });
+  const frontendUrl = process.env.FRONTEND_URL;
+  if (!frontendUrl) {
+    throw new Error('FRONTEND_URL is required');
+  }
+  app.enableCors({ origin: frontendUrl });
 
   await app.listen(process.env.PORT ?? 3000);
 }
