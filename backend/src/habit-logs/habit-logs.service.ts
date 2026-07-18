@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -8,6 +9,7 @@ import { Repository } from 'typeorm';
 import { HabitsService } from '../habits/habits.service';
 import { HabitLog } from './habit-log.entity';
 import { CreateHabitLogDto } from './dto/create-habit-log.dto';
+import { isWorkday } from '../shifts/shift-calendar';
 
 @Injectable()
 export class HabitLogsService {
@@ -33,7 +35,16 @@ export class HabitLogsService {
   }
 
   async create(habitId: string, userId: string, dto: CreateHabitLogDto) {
-    await this.habitsService.findOne(habitId, userId); // бросит 404 или 403
+    const habit = await this.habitsService.findOne(habitId, userId); // бросит 404 или 403
+
+    if (
+      habit.frequency === 'workdays' &&
+      !isWorkday(habit.owner.shiftPattern, habit.owner.shiftStartDate, dto.date)
+    ) {
+      throw new BadRequestException(
+        'Рабочую привычку нельзя отметить в выходной день графика',
+      );
+    }
 
     const existing = await this.habitLogsRepository.findOne({
       where: { habit: { id: habitId }, date: dto.date },

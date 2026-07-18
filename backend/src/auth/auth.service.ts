@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +30,8 @@ export class AuthService {
       email: dto.email,
       passwordHash,
       shiftPattern: dto.shiftPattern,
+      shiftStartDate: dto.shiftStartDate,
+      timeZone: dto.timeZone,
     });
     // возвращаем профиль БЕЗ хэша: всё, что вернул этот метод, уйдёт клиенту в ответе на POST /auth/register
     const { passwordHash: _hash, ...profile } = user;
@@ -53,5 +56,15 @@ export class AuthService {
     }
     const { passwordHash, ...profile } = user;
     return profile;
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    // update() не бросает 404 сам: без явной проверки чужой/удалённый id молча ничего не изменит
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    await this.usersRepository.update(userId, dto);
+    return this.me(userId);
   }
 }

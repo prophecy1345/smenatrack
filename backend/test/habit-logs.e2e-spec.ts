@@ -8,6 +8,7 @@ describe('POST /habits/:id/logs (интеграционный тест)', () => 
   let app: INestApplication<App>;
   let testToken: string;
   let habitId: string;
+  let workdayHabitId: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -26,7 +27,13 @@ describe('POST /habits/:id/logs (интеграционный тест)', () => 
     const email = `logs-e2e-${Date.now()}@example.com`;
     await request(app.getHttpServer())
       .post('/auth/register')
-      .send({ email, password: 'password123', shiftPattern: '2/2' })
+      .send({
+        email,
+        password: 'password123',
+        shiftPattern: '2/2',
+        shiftStartDate: '2026-07-18',
+        timeZone: 'UTC',
+      })
       .expect(201);
     const login = await request(app.getHttpServer())
       .post('/auth/login')
@@ -40,6 +47,13 @@ describe('POST /habits/:id/logs (интеграционный тест)', () => 
       .send({ name: 'Бег', frequency: 'daily' })
       .expect(201);
     habitId = (habit.body as { id: string }).id;
+
+    const workdayHabit = await request(app.getHttpServer())
+      .post('/habits')
+      .set('Authorization', `Bearer ${testToken}`)
+      .send({ name: 'После смены', frequency: 'workdays' })
+      .expect(201);
+    workdayHabitId = (workdayHabit.body as { id: string }).id;
   });
 
   afterAll(async () => {
@@ -64,6 +78,35 @@ describe('POST /habits/:id/logs (интеграционный тест)', () => 
       .send({ date: '2026-01-15' })
       .expect(409);
   });
+
+  it('разрешает рабочую привычку в рабочий день цикла', () => {
+    return request(app.getHttpServer())
+      .post(`/habits/${workdayHabitId}/logs`)
+      .set('Authorization', `Bearer ${testToken}`)
+      .send({ date: '2026-07-18' })
+      .expect(201);
+  });
+
+  it('запрещает рабочую привычку в выходной день цикла', () => {
+    return request(app.getHttpServer())
+      .post(`/habits/${workdayHabitId}/logs`)
+      .set('Authorization', `Bearer ${testToken}`)
+      .send({ date: '2026-07-20' })
+      .expect(400);
+  });
+
+  // все три формы проходят голый @IsDateString(), но не разбираются isWorkday:
+  // без строгой валидации в DTO они дают 500 вместо 400
+  it.each(['2026-07-18T10:00:00Z', '2026-02-30', '20260718'])(
+    'отклоняет дату %s с 400, а не падает с 500',
+    (date) => {
+      return request(app.getHttpServer())
+        .post(`/habits/${workdayHabitId}/logs`)
+        .set('Authorization', `Bearer ${testToken}`)
+        .send({ date })
+        .expect(400);
+    },
+  );
 
   it('для несуществующей привычки возвращает 404', () => {
     return request(app.getHttpServer())

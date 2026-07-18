@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { RouterLink, useRouter } from 'vue-router';
-import { useAuthStore } from '../stores/auth';
+import { storeToRefs } from 'pinia'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
-const router = useRouter();
-const authStore = useAuthStore();
-const { user } = storeToRefs(authStore); // storeToRefs — обязателен для state/getters, иначе реактивность потеряется
-const { logout } = authStore; // actions — просто функции, их можно доставать напрямую
+const router = useRouter()
+const authStore = useAuthStore()
+const { user } = storeToRefs(authStore) // storeToRefs — обязателен для state/getters, иначе реактивность потеряется
+const { logout } = authStore // actions — просто функции, их можно доставать напрямую
 
 function onLogout() {
-  logout();
-  router.push('/login'); // guard срабатывает только при навигации, поэтому уводим вручную
+  logout()
+  router.push('/login') // guard срабатывает только при навигации, поэтому уводим вручную
 }
 </script>
 <template>

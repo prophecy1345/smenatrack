@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
-import { useHabits } from '../composables/useHabits';
+import { reactive } from 'vue'
+import { useHabits } from '../composables/useHabits'
 
 // событие меняется: в модуле 8 это был 'create' с самим объектом привычки (родитель
 // добавлял её в мок-массив сам); теперь источник истины — backend, поэтому событие
 // без payload — оно только сигнализирует «получилось», а обновляет список fetchHabits()
-const emit = defineEmits<{ created: [] }>();
-const { createHabit, fieldErrors } = useHabits();
-const form = reactive({ name: '', frequency: 'daily' });
+const emit = defineEmits<{ created: [] }>()
+const { createHabit, fieldErrors } = useHabits()
+const form = reactive({ name: '', frequency: 'daily' })
 
 async function onSubmit() {
-  const ok = await createHabit({ ...form });
+  const ok = await createHabit({ ...form })
   if (ok) {
-    emit('created');
-    form.name = '';
+    emit('created')
+    form.name = ''
   }
 }
 </script>

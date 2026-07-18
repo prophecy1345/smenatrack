@@ -1,6 +1,10 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { HabitLogsService } from './habit-logs.service';
 import { HabitLog } from './habit-log.entity';
 import { HabitsService } from '../habits/habits.service';
@@ -41,6 +45,20 @@ describe('HabitLogsService', () => {
     await expect(
       service.create('h1', 'user-1', { date: '2026-07-18' }),
     ).rejects.toThrow(ConflictException);
+    expect(mockRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('не создаёт отметку рабочей привычки в выходной графика', async () => {
+    mockHabitsService.findOne.mockResolvedValue({
+      id: 'h1',
+      frequency: 'workdays',
+      owner: { shiftPattern: '2/2', shiftStartDate: '2026-07-18' },
+    });
+
+    await expect(
+      service.create('h1', 'user-1', { date: '2026-07-20' }),
+    ).rejects.toThrow(BadRequestException);
+    expect(mockRepo.findOne).not.toHaveBeenCalled();
     expect(mockRepo.save).not.toHaveBeenCalled();
   });
 

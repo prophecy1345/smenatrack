@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
-const props = defineProps<{ logs: { id: string; date: string }[] }>();
-const emit = defineEmits<{ remove: [id: string] }>();
+const props = defineProps<{ logs: { id: string; date: string }[] }>()
+const emit = defineEmits<{ remove: [id: string] }>()
 
-const logsCount = computed(() => props.logs.length);
+const logsCount = computed(() => props.logs.length)
 </script>
 <template>
   <p>Всего отметок: {{ logsCount }}</p>
