@@ -7,6 +7,6 @@ export class HealthController {
   @ApiResponse({ status: 200, description: 'Сервис отвечает' })
   @Get()
   check() {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    return { status: 'ok' };
   }
 }
