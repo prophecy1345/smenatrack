@@ -22,12 +22,12 @@
     "prettier": "^3.9.5"
   },
   "lint-staged": {
-    "*.{js,mjs}": [
+    "./*.{js,mjs}": [
       "eslint --fix",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": "prettier --write",
     "backend/**/*.ts": "bash -c 'npm --prefix backend run lint'",
-    "frontend/**/*.{ts,vue}": "bash -c 'npm --prefix frontend run lint'"
+    "frontend/**/*.{js,ts,vue}": "bash -c 'npm --prefix frontend run lint'"
   }
 }
