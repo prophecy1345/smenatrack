@@ -10,9 +10,16 @@ services:
       POSTGRES_PASSWORD: smenatrack_password
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U smenatrack -d smenatrack']
+      interval: 5s
+      timeout: 5s
+      retries: 10
   backend:
     build: ./backend
-    depends_on: [postgres]
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports: ['3000:3000']
     environment:
       DB_HOST: postgres # имя сервиса Compose, а не localhost — оба контейнера в одной docker-сети
@@ -20,7 +27,7 @@ services:
       DB_USER: smenatrack
       DB_PASSWORD: smenatrack_password
       DB_NAME: smenatrack
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the root .env file}
       FRONTEND_URL: http://localhost:8080
   frontend:
     build:
