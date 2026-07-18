@@ -14,6 +14,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HabitsService } from './habits.service';
 import { CreateHabitDto } from './dto/create-habit.dto';
 import { UpdateHabitDto } from './dto/update-habit.dto';
+import { ListHabitsQueryDto } from './dto/list-habits-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/authenticated-request';
 
@@ -25,17 +26,9 @@ export class HabitsController {
   @Get()
   findAll(
     @Req() req: AuthenticatedRequest,
-    @Query('page') page = 1,
-    @Query('limit') limit = 20,
-    @Query('frequency') frequency?: string,
-    @Query('search') search?: string,
+    @Query() query: ListHabitsQueryDto,
   ) {
-    return this.habitsService.findPaginated(req.user.userId, {
-      page: +page,
-      limit: +limit,
-      frequency,
-      search,
-    });
+    return this.habitsService.findPaginated(req.user.userId, query);
   }
 
   @ApiOperation({ summary: 'Получить одну привычку по id' })

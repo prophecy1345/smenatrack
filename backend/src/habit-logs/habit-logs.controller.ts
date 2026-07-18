@@ -12,6 +12,7 @@ import {
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HabitLogsService } from './habit-logs.service';
 import { CreateHabitLogDto } from './dto/create-habit-log.dto';
+import { ListHabitLogsQueryDto } from './dto/list-habit-logs-query.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/authenticated-request';
 
@@ -29,13 +30,9 @@ export class HabitLogsController {
   findAll(
     @Param('habitId') habitId: string,
     @Req() req: AuthenticatedRequest,
-    @Query('page') page = 1,
-    @Query('limit') limit = 20,
+    @Query() query: ListHabitLogsQueryDto,
   ) {
-    return this.habitLogsService.findPaginated(habitId, req.user.userId, {
-      page: +page,
-      limit: +limit,
-    });
+    return this.habitLogsService.findPaginated(habitId, req.user.userId, query);
   }
 
   @ApiOperation({ summary: 'Отметить привычку выполненной' })
