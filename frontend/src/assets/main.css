@@ -118,8 +118,8 @@ button:hover {
   filter: brightness(1.08);
 }
 
-/* Карточка привычки: единственный <div> в HabitCard.vue */
-#app div {
+/* Карточка привычки */
+[data-habit-card] {
   display: flex;
   align-items: center;
   gap: 0.75rem;
